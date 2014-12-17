@@ -2,7 +2,8 @@
 
 #from PIL import Image, ImageDraw # 7.6.1以降のみ必要。
 
-my_data = [line.rstrip().split(' ') for line in file('decision_tree_example.txt')]
+#my_data = [line.rstripp().split(' ') for line in file('decision_tree_example.txt')] # 空欄で区切りたい場合
+my_data = [line.rstrip().split('\t') for line in file('decision_tree_example.txt')]
 
 class decisionnode:
     def __init__(self, col=-1, value=None, results=None, tb=None, fb=None):
@@ -58,14 +59,14 @@ def entropy(rows):
     for r in results.keys():
         p = float(results[r]) / len(rows)
         ent = ent - p*log2(p)
-    return
+    return ent
 
 def buildtree(rows, scoref = entropy):
     if len(rows) == 0: return None
     current_score = scoref(rows)
 
     best_gain = 0.0
-    best_riteria = None
+    best_criteria = None
     best_sets = None
 
     column_count = len(rows[0]) - 1
@@ -73,7 +74,7 @@ def buildtree(rows, scoref = entropy):
 
         column_values = {}
         for row in rows:
-            column_values=[row[col]] = 1
+            column_values[row[col]] = 1
 
         for value in column_values.keys():
             (set1, set2) = divideset(rows, col, value)
@@ -85,12 +86,13 @@ def buildtree(rows, scoref = entropy):
                 best_criteria = (col, value)
                 best_sets = (set1, set2)
 
-        if best_gain > 0:
-            trueBranch = buildtree(best_sets[0], scoref)
-            falseBranch = buildtree(best_sets[1], scoref)
-            return decisionnode(col = best_criteria[0], value = best_criteria[1], tb = trueBeanch, fb = falseBranch)
-        else:
-            return decisionnode(results = uniquecounts(rows))
+    if best_gain > 0:
+        trueBranch  = buildtree(best_sets[0], scoref)
+        falseBranch = buildtree(best_sets[1], scoref)
+        return decisionnode(col = best_criteria[0], value = best_criteria[1], tb = trueBranch, fb = falseBranch)
+
+    else:
+        return decisionnode(results = uniquecounts(rows))
 
 def printtree(tree, indent=''):
     
