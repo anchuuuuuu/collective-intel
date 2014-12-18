@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-#from PIL import Image, ImageDraw # 7.6.1以降のみ必要。
+from PIL import Image, ImageDraw # 7.6.1以降のみ必要。
 
-#my_data = [line.rstripp().split(' ') for line in file('decision_tree_example.txt')] # 空欄で区切りたい場合
+# 7.1 サインアップを予測する
 my_data = [line.rstrip().split('\t') for line in file('decision_tree_example.txt')]
 
+# 7.2 決定木入門
 class decisionnode:
     def __init__(self, col=-1, value=None, results=None, tb=None, fb=None):
         self.col = col
@@ -13,9 +14,10 @@ class decisionnode:
         self.tb = tb
         self.fb = fb
 
+# 7.3 ツリーのトレーニング
 def divideset(rows, column, value):
     
-    split_functino=None
+    split_function=None
     if isinstance(value, int) or isinstance(value, float):
         split_function = lambda row:row[column] >= value
     else:
@@ -25,7 +27,7 @@ def divideset(rows, column, value):
     set2 = [row for row in rows if not split_function(row)]
     return (set1, set2)
 
-
+# 7.4 最高の分割を選ぶ
 def uniquecounts(rows):
     results = {}
     for row in rows:
@@ -35,7 +37,7 @@ def uniquecounts(rows):
         results[r] += 1
     return results
 
-
+# 7.4.1 ジニ不純度
 def giniimpurity(rows):
     total = len(rows)
     counts = uniquecounts(rows)
@@ -50,6 +52,7 @@ def giniimpurity(rows):
             imp += p1 * p2
     return imp
 
+# 7.4.2 エントロピー
 def entropy(rows):
     from math import log
     log2 = lambda x: log(x) / log(2)
@@ -61,6 +64,7 @@ def entropy(rows):
         ent = ent - p*log2(p)
     return ent
 
+# 7.5 再帰的なツリー構築
 def buildtree(rows, scoref = entropy):
     if len(rows) == 0: return None
     current_score = scoref(rows)
@@ -94,6 +98,7 @@ def buildtree(rows, scoref = entropy):
     else:
         return decisionnode(results = uniquecounts(rows))
 
+# 7.6 決定木の表示
 def printtree(tree, indent=''):
     
     if tree.results != None:
@@ -106,6 +111,7 @@ def printtree(tree, indent=''):
         print indent + 'F->',
         printtree(tree.fb, indent + ' ')
 
+# 7.6.1 グラフィック表示
 def getwidth(tree):
     if tree.tb == None and tree.fb == None: return 1
     return getwidth(tree.tb) + getwidth(tree.fb)
@@ -144,6 +150,7 @@ def drawnode(draw, tree, x, y):
         txt = ' \n'.join(['%s:%d'%v for v in tree.results.items()])
         draw.text((x - 20, y), txt, (0,0,0))
 
+# 7.7 新しい観測を分類する
 def classify(observation, tree):
     if tree.results != None:
         return tree.results
@@ -159,6 +166,7 @@ def classify(observation, tree):
             else: branch = tree.fb
         return classify(observation, branch)
 
+# 7.8 ツリーの刈り込み
 def prune(tree, mingain):
     if tree.tb.results == None:
         prune(tree.tb, mingain)
@@ -178,6 +186,7 @@ def prune(tree, mingain):
             tree.tb, tree.fb = None, None
             tree.results = uniquecouns(tb + fb)
 
+# 7.9 欠損データへの対処
 def mdclassify(observation, tree):
     if tree.results != None:
         return tree.results
@@ -206,6 +215,7 @@ def mdclassify(observation, tree):
                 else: beanch = tree.fb
             return mdclassify(observatoin, branch)
 
+# 7.10 数値による帰結への対処
 def variance(rows):
     if len(rows) == 0: return 0
     data = [float (row[len(row) - 1]) for row in rows]
