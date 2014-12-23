@@ -18,6 +18,7 @@ class decisionnode:
 def divideset(rows, column, value):
     
     split_function=None
+
     if isinstance(value, int) or isinstance(value, float):
         split_function = lambda row:row[column] >= value
     else:
@@ -173,7 +174,7 @@ def prune(tree, mingain):
     if tree.fb.results == None:
         prune(tree.fb, mingain)
 
-    if tree.tb.results != None and tre.db.results != None:
+    if tree.tb.results != None and tree.fb.results != None:
         tb, fb = [], []
         for v, c in tree.tb.results.items():
             tb += [[v]] * c
@@ -184,36 +185,36 @@ def prune(tree, mingain):
 
         if delta < mingain:
             tree.tb, tree.fb = None, None
-            tree.results = uniquecouns(tb + fb)
+            tree.results = uniquecounts(tb + fb)
 
 # 7.9 欠損データへの対処
 def mdclassify(observation, tree):
     if tree.results != None:
         return tree.results
     else:
-        v = observatoin[tree.col]
+        v = observation[tree.col]
         if v == None:
             tr, fr = mdclassify(observation, tree.tb), mdclassify(observation, tree.fb)
             tcount = sum(tr.values())
             fcount = sum(fr.values())
             tw = float(tcount) / (tcount + fcount)
-            fw = float(fcount) / (fcount + fcount)
-            results = {}
+            fw = float(fcount) / (tcount + fcount)
+            result = {}
 
-            for k, v in tr.items(): results[k] = v * tw
+            for k, v in tr.items(): result[k] = v * tw
             for k, v in fr.items():
-                if k not in results: result[k] = 0
+                if k not in result: result[k] = 0
                 result[k] += v * fw
             return result
 
         else:
-            if isintance(v. int) or isinstance(v, float):
-                if v >= tree.value: beanch = tree.tb
-                else: beanch = tree.fb
+            if isinstance(v, int) or isinstance(v, float):
+                if v >= tree.value: branch = tree.tb
+                else: branch = tree.fb
             else:
-                if v == tree.value: beanch = tree.tb
-                else: beanch = tree.fb
-            return mdclassify(observatoin, branch)
+                if v == tree.value: branch = tree.tb
+                else: branch = tree.fb
+            return mdclassify(observation, branch)
 
 # 7.10 数値による帰結への対処
 def variance(rows):
